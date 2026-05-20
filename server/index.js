@@ -153,6 +153,9 @@ app.post("/api/posts", authAdmin, upload.single("image"), async (req, res) => {
         imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
         imagePublicId = req.file.filename;
       }
+    } else if (req.body.imageUrl) {
+      // Handle image URL from request body
+      imageUrl = req.body.imageUrl.trim();
     }
 
     const post = new Post({
@@ -197,6 +200,13 @@ app.put("/api/posts/:id", authAdmin, upload.single("image"), async (req, res) =>
         post.imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
         post.imagePublicId = req.file.filename;
       }
+    } else if (req.body.imageUrl) {
+      // Handle image URL from request body
+      if (post.imageUrl) {
+        await deleteImage(post.imageUrl, post.imagePublicId);
+      }
+      post.imageUrl = req.body.imageUrl.trim();
+      post.imagePublicId = "";
     }
 
     await post.save();
