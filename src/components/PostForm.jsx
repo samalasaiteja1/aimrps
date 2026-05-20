@@ -5,7 +5,9 @@ export default function PostForm({ isOpen, onClose, onSave, editingPost, token, 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
   const [imagePreview, setImagePreview] = useState("");
+  const [uploadMode, setUploadMode] = useState("file"); // "file" or "url"
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -15,11 +17,15 @@ export default function PostForm({ isOpen, onClose, onSave, editingPost, token, 
       setContent(editingPost.content || "");
       setImagePreview(editingPost.imageUrl || "");
       setImageFile(null);
+      setImageUrl("");
+      setUploadMode("file");
     } else {
       setTitle("");
       setContent("");
       setImagePreview("");
       setImageFile(null);
+      setImageUrl("");
+      setUploadMode("file");
     }
     setError("");
   }, [editingPost, isOpen]);
@@ -42,8 +48,9 @@ export default function PostForm({ isOpen, onClose, onSave, editingPost, token, 
       return;
     }
 
-    setError("");
     setImageFile(file);
+    setImageUrl("");
+    setError("");
 
     // Create local URL for preview
     const reader = new FileReader();
@@ -51,6 +58,16 @@ export default function PostForm({ isOpen, onClose, onSave, editingPost, token, 
       setImagePreview(reader.result);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleUrlChange = (e) => {
+    const url = e.target.value.trim();
+    setImageUrl(url);
+    if (url) {
+      setImageFile(null);
+      setImagePreview(url);
+      setError("");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -67,8 +84,11 @@ export default function PostForm({ isOpen, onClose, onSave, editingPost, token, 
       const formData = new FormData();
       formData.append("title", title.trim());
       formData.append("content", content.trim());
+      
       if (imageFile) {
         formData.append("image", imageFile);
+      } else if (imageUrl) {
+        formData.append("imageUrl", imageUrl);
       }
 
       const url = editingPost ? `${apiUrl}/posts/${editingPost._id}` : `${apiUrl}/posts`;
@@ -134,32 +154,63 @@ export default function PostForm({ isOpen, onClose, onSave, editingPost, token, 
             <label htmlFor="postContent">Content</label>
             <textarea
               id="postContent"
-              rows="6"
-              placeholder="Write your post content here..."
+              placeholder="Enter post content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               required
               disabled={loading}
+              rows="5"
             />
           </div>
 
           <div className="form-group">
-            <label>Post Image</label>
-            <div className="upload-zone">
-              <input
-                type="file"
-                id="postImage"
-                accept="image/*"
-                onChange={handleImageChange}
+            <label>Image</label>
+            <div className="upload-mode-tabs">
+              <button
+                type="button"
+                className={`tab-btn ${uploadMode === "file" ? "active" : ""}`}
+                onClick={() => { setUploadMode("file"); setImageUrl(""); }}
                 disabled={loading}
-                style={{ display: "none" }}
-              />
-              <label htmlFor="postImage" className="upload-label">
-                <Upload size={24} />
-                <span>Choose Image or Drag & Drop</span>
-                <span className="upload-hint">JPG, JPEG, PNG, or WEBP up to 5MB</span>
-              </label>
+              >
+                Upload File
+              </button>
+              <button
+                type="button"
+                className={`tab-btn ${uploadMode === "url" ? "active" : ""}`}
+                onClick={() => { setUploadMode("url"); setImageFile(null); }}
+                disabled={loading}
+              >
+                Image URL
+              </button>
             </div>
+
+            {uploadMode === "file" ? (
+              <div className="upload-zone">
+                <input
+                  type="file"
+                  id="postImage"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  disabled={loading}
+                  style={{ display: "none" }}
+                />
+                <label htmlFor="postImage" className="upload-label">
+                  <Upload size={24} />
+                  <span>Choose Image or Drag & Drop</span>
+                  <span className="upload-hint">JPG, JPEG, PNG, or WEBP up to 5MB</span>
+                </label>
+              </div>
+            ) : (
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <input
+                  type="url"
+                  placeholder="Enter image URL (e.g., https://example.com/image.jpg)"
+                  value={imageUrl}
+                  onChange={handleUrlChange}
+                  disabled={loading}
+                />
+              </div>
+            )}
 
             {imagePreview && (
               <div className="image-upload-preview">
@@ -169,6 +220,7 @@ export default function PostForm({ isOpen, onClose, onSave, editingPost, token, 
                   className="remove-preview-btn"
                   onClick={() => {
                     setImageFile(null);
+                    setImageUrl("");
                     setImagePreview("");
                   }}
                   disabled={loading}
