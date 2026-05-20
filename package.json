@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "npm install --prefix server && npm run build && npm start --prefix server"
+    "start": "npm install --prefix server --legacy-peer-deps && npm run build && npm start --prefix server"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
