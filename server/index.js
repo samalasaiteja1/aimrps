@@ -12,15 +12,17 @@ const Comment = require("./models/Comment");
 const Review = require("./models/Review");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // Connect to Database
 connectDB();
 
 // Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, "../dist")));
 
 // Serve uploads folder statically if not using Cloudinary
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -394,6 +396,11 @@ app.delete("/api/reviews/:id", async (req, res) => {
     console.error("Error deleting review:", error.message);
     res.status(500).json({ message: "Server error deleting review" });
   }
+});
+
+// Fallback route for frontend SPA routing
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../dist/index.html"));
 });
 
 // Start Server

@@ -31,6 +31,9 @@ const navLinks = [
   { href: "#contact", label: "Contact" },
 ];
 
+// API URL - use relative path for same-origin requests
+const API_URL = "/api";
+
 const services = [
   {
     icon: Users,
@@ -57,8 +60,6 @@ const services = [
       "Coordinating campaigns, public meetings, and grassroots events to mobilize communities for positive change.",
   },
 ];
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 function App() {
   const [menuOpen, setMenuOpen] = React.useState(false);
